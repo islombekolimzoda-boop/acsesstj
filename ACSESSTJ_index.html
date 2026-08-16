@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACSESSTJ — Auto Accessories</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8;color:#151515}header{position:sticky;top:0;z-index:5;background:#111;color:#fff;padding:16px 5%;display:flex;align-items:center;justify-content:space-between}.logo{font-size:25px;font-weight:800;letter-spacing:1px}#lang{padding:8px;border-radius:7px;margin-left:15px}nav{display:flex;gap:20px;flex-wrap:wrap}nav a{color:#fff;text-decoration:none}.hero{min-height:430px;padding:90px 8%;display:flex;align-items:center;background:linear-gradient(120deg,#111,#303030);color:#fff}.hero div{max-width:650px}.hero h1{font-size:48px;margin:15px 0}.hero p{font-size:19px;color:#ddd}.hero button,form button,.card button{border:0;background:#ff5a1f;color:#fff;padding:13px 18px;border-radius:9px;font-weight:700;cursor:pointer}section{max-width:1150px;margin:auto;padding:55px 5%}h2{font-size:32px}.filters{display:flex;gap:10px;margin-bottom:25px}.filters input,.filters select,form input,form textarea{width:100%;padding:13px;border:1px solid #ddd;border-radius:8px;font-size:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px}.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 4px 18px #00000010}.pic{height:150px;background:#eee;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:48px}.card h3{margin-bottom:5px}.price{font-weight:800;margin:10px 0 14px}.card button{width:100%}.cartrow{background:#fff;padding:15px;border-radius:10px;margin:10px 0;display:flex;justify-content:space-between;gap:10px}.total{font-size:20px;margin-top:20px}form{max-width:600px;display:grid;gap:12px}footer{text-align:center;background:#111;color:#aaa;padding:30px}@media(max-width:650px){header{display:block}nav{margin-top:12px;gap:12px}.hero h1{font-size:36px}.filters{display:block}.filters>*{margin-bottom:10px}}
+</style>
+</head>
+<body>
+<header><div class="logo">ACSESSTJ</div><select id="lang" aria-label="Language"><option value="uz">O‘zbekcha</option><option value="ru">Русский</option><option value="tg">Тоҷикӣ</option></select><nav><a href="#home">Bosh sahifa</a><a href="#catalog">Mahsulotlar</a><a href="#cart">🛒 Savat <b id="cartCount">0</b></a><a href="#orders">Buyurtmalar</a></nav></header>
+<main>
+<section id="home" class="hero"><div><span>🚗 AUTO ACCESSORIES</span><h1>Mashinangiz uchun kerakli hamma narsa</h1><p>Chexol, polik, aromatizator, palatka va boshqa aksessuarlar.</p><button onclick="location.hash='catalog'">Mahsulotlarni ko‘rish</button></div></section>
+<section id="catalog"><h2>Mahsulotlar</h2><div class="filters"><input id="search" placeholder="Mahsulot qidirish..."><select id="category"><option value="all">Barcha kategoriyalar</option><option>Aromatizator</option><option>Chexol</option><option>Polik</option><option>Palatka</option><option>Avto aksessuar</option></select></div><div id="products" class="grid"></div></section>
+<section id="cart"><h2>Savat</h2><div id="cartItems"></div><div class="total">Jami: <strong id="total">0</strong> so‘m</div></section>
+<section id="checkout"><h2>Buyurtma berish</h2><form id="orderForm"><input id="name" required placeholder="Ism-familiya"><input id="phone" required placeholder="Telefon raqami"><textarea id="address" required placeholder="Yetkazib berish manzili"></textarea><textarea id="note" placeholder="Izoh (ixtiyoriy)"></textarea><button>Buyurtmani yuborish</button></form></section>
+<section id="orders"><h2>Mening buyurtmalarim</h2><div id="ordersList"></div></section>
+</main>
+<footer>© 2026 ACSESSTJ — Auto Accessories</footer>
+<script>
+const products=[
+{id:1,name:'Avto aromatizator',cat:'Aromatizator',price:0,icon:'🌿'},
+{id:2,name:'Avto chexol',cat:'Chexol',price:0,icon:'🪑'},
+{id:3,name:'Avto polik',cat:'Polik',price:0,icon:'🧼'},
+{id:4,name:'Avto palatka',cat:'Palatka',price:0,icon:'⛺'},
+{id:5,name:'Avto aksessuar',cat:'Avto aksessuar',price:0,icon:'🔧'}
+];
+let cart=JSON.parse(localStorage.getItem('ac_cart')||'[]');
+
+const money=n=>new Intl.NumberFormat('uz-UZ').format(n);
+function renderProducts(){
+ const q=(document.querySelector('#search').value||'').toLowerCase(), c=document.querySelector('#category').value;
+ const list=products.filter(p=>(c==='all'||p.cat===c)&&p.name.toLowerCase().includes(q));
+ document.querySelector('#products').innerHTML=list.map(p=>`<article class="card"><div class="pic">${p.icon}</div><h3>${p.name}</h3><small>${p.cat}</small><div class="price">${p.price?money(p.price)+' so‘m':'Narx keyin qo‘shiladi'}</div><button onclick="add(${p.id})">Savatga qo‘shish</button></article>`).join('');
+}
+function add(id){if(!cart.includes(id))cart.push(id);save();renderCart();location.hash='cart'}
+function save(){localStorage.setItem('ac_cart',JSON.stringify(cart));document.querySelector('#cartCount').textContent=cart.length}
+function renderCart(){
+ const box=document.querySelector('#cartItems');let total=0;
+ if(!cart.length){box.innerHTML='<p>Savat hozircha bo‘sh.</p>';document.querySelector('#total').textContent='0';return}
+ box.innerHTML=cart.map(id=>{const p=products.find(x=>x.id===id);total+=p.price;return `<div class="cartrow"><span>${p.icon} ${p.name}</span><span>${p.price?money(p.price)+' so‘m':'Narx belgilanmagan'} <button onclick="removeItem(${id})">✕</button></span></div>`}).join('');
+ document.querySelector('#total').textContent=money(total);
+}
+function removeItem(id){cart=cart.filter(x=>x!==id);save();renderCart()}
+document.querySelector('#search').oninput=renderProducts;
+document.querySelector('#category').onchange=renderProducts;
+document.querySelector('#orderForm').onsubmit=e=>{
+ e.preventDefault(); if(!cart.length)return alert('Avval savatga mahsulot qo‘shing.');
+ const order={id:Date.now(),name:document.querySelector('#name').value,phone:document.querySelector('#phone').value,address:document.querySelector('#address').value,note:document.querySelector('#note').value,items:[...cart],status:'Qabul qilindi'};
+ const orders=JSON.parse(localStorage.getItem('ac_orders')||'[]');orders.push(order);localStorage.setItem('ac_orders',JSON.stringify(orders));
+ cart=[];save();renderCart();e.target.reset();renderOrders();alert('Buyurtmangiz qabul qilindi!');location.hash='orders';
+};
+function renderOrders(){
+ const orders=JSON.parse(localStorage.getItem('ac_orders')||'[]'),box=document.querySelector('#ordersList');
+ box.innerHTML=orders.length?orders.map(o=>`<div class="card"><b>Buyurtma #${o.id}</b><p>${o.name} — ${o.phone}</p><p>${o.address}</p><strong>Status: ${o.status}</strong></div>`).join(''):'<p>Hali buyurtmalar yo‘q.</p>';
+}
+renderProducts();save();renderCart();renderOrders();
+
+const translations={
+uz:{home:"Bosh sahifa",products:"Mahsulotlar",cart:"Savat",orders:"Buyurtmalar",hero:"Mashinangiz uchun kerakli hamma narsa",desc:"Chexol, polik, aromatizator, palatka va boshqa aksessuarlar.",view:"Mahsulotlarni ko‘rish",search:"Mahsulot qidirish...",all:"Barcha kategoriyalar",checkout:"Buyurtma berish",name:"Ism-familiya",phone:"Telefon raqami",address:"Yetkazib berish manzili",note:"Izoh (ixtiyoriy)",send:"Buyurtmani yuborish",myorders:"Mening buyurtmalarim"},
+ru:{home:"Главная",products:"Товары",cart:"Корзина",orders:"Заказы",hero:"Всё необходимое для вашего автомобиля",desc:"Чехлы, коврики, ароматизаторы, палатки и другие аксессуары.",view:"Смотреть товары",search:"Поиск товара...",all:"Все категории",checkout:"Оформить заказ",name:"Имя и фамилия",phone:"Номер телефона",address:"Адрес доставки",note:"Комментарий (необязательно)",send:"Отправить заказ",myorders:"Мои заказы"},
+tg:{home:"Саҳифаи асосӣ",products:"Маҳсулот",cart:"Сабад",orders:"Фармоишҳо",hero:"Ҳама чиз барои автомобили шумо",desc:"Чехол, полик, ароматизатор, хайма ва дигар лавозимот.",view:"Дидани маҳсулот",search:"Ҷустуҷӯи маҳсулот...",all:"Ҳамаи категорияҳо",checkout:"Фармоиш додан",name:"Ном ва насаб",phone:"Рақами телефон",address:"Суроғаи расонидан",note:"Шарҳ (ихтиёрӣ)",send:"Фармоишро фиристодан",myorders:"Фармоишҳои ман"}
+};
+function setLang(l){
+ const t=translations[l]||translations.uz;
+ document.querySelector('nav a[href="#home"]').textContent=t.home;
+ document.querySelector('nav a[href="#catalog"]').textContent=t.products;
+ document.querySelector('nav a[href="#cart"]').childNodes[0].textContent='🛒 '+t.cart+' ';
+ document.querySelector('nav a[href="#orders"]').textContent=t.orders;
+ document.querySelector('.hero h1').textContent=t.hero;
+ document.querySelector('.hero p').textContent=t.desc;
+ document.querySelector('.hero button').textContent=t.view;
+ document.querySelector('#search').placeholder=t.search;
+ document.querySelector('#category option[value="all"]').textContent=t.all;
+ document.querySelector('#cart h2').textContent=t.cart;
+ document.querySelector('#checkout h2').textContent=t.checkout;
+ document.querySelector('#name').placeholder=t.name;
+ document.querySelector('#phone').placeholder=t.phone;
+ document.querySelector('#address').placeholder=t.address;
+ document.querySelector('#note').placeholder=t.note;
+ document.querySelector('#orderForm button').textContent=t.send;
+ document.querySelector('#orders h2').textContent=t.myorders;
+ localStorage.setItem('ac_lang',l);
+}
+document.querySelector('#lang').onchange=e=>setLang(e.target.value);
+const savedLang=localStorage.getItem('ac_lang')||'uz';
+document.querySelector('#lang').value=savedLang; setLang(savedLang);
+
+</script>
+</body></html>
